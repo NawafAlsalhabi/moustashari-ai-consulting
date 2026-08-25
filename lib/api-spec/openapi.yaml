@@ -1,0 +1,777 @@
+openapi: 3.1.0
+info:
+  title: Api
+  version: 0.1.0
+  description: Moustashari AI - Agentic AI-powered business consulting platform
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: auth
+    description: Authentication
+  - name: services
+    description: Consulting services
+  - name: consultants
+    description: Consultant profiles
+  - name: chat
+    description: AI chat assistant
+  - name: cart
+    description: Shopping cart
+  - name: categories
+    description: Service categories
+  - name: recommendations
+    description: Personalized recommendations
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  # Auth
+  /auth/register:
+    post:
+      operationId: register
+      tags: [auth]
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterInput"
+      responses:
+        "201":
+          description: Registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "400":
+          description: Bad request
+
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginInput"
+      responses:
+        "200":
+          description: Logged in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          description: Invalid credentials
+
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [auth]
+      summary: Logout
+      responses:
+        "200":
+          description: Logged out
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /auth/me:
+    get:
+      operationId: getMe
+      tags: [auth]
+      summary: Get current user
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          description: Unauthorized
+
+  # Categories
+  /categories:
+    get:
+      operationId: listCategories
+      tags: [categories]
+      summary: List service categories
+      responses:
+        "200":
+          description: List of categories
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Category"
+
+  # Services
+  /services:
+    get:
+      operationId: listServices
+      tags: [services]
+      summary: List consulting services
+      parameters:
+        - name: categoryId
+          in: query
+          schema:
+            type: ["integer", "null"]
+        - name: search
+          in: query
+          schema:
+            type: ["string", "null"]
+        - name: minPrice
+          in: query
+          schema:
+            type: ["number", "null"]
+        - name: maxPrice
+          in: query
+          schema:
+            type: ["number", "null"]
+      responses:
+        "200":
+          description: List of services
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Service"
+
+  /services/{id}:
+    get:
+      operationId: getService
+      tags: [services]
+      summary: Get service detail
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Service detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServiceDetail"
+        "404":
+          description: Not found
+
+  /services/featured:
+    get:
+      operationId: listFeaturedServices
+      tags: [services]
+      summary: List featured/popular services
+      responses:
+        "200":
+          description: Featured services
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Service"
+
+  # Consultants
+  /consultants:
+    get:
+      operationId: listConsultants
+      tags: [consultants]
+      summary: List consultants
+      parameters:
+        - name: categoryId
+          in: query
+          schema:
+            type: ["integer", "null"]
+        - name: search
+          in: query
+          schema:
+            type: ["string", "null"]
+      responses:
+        "200":
+          description: List of consultants
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Consultant"
+
+  /consultants/{id}:
+    get:
+      operationId: getConsultant
+      tags: [consultants]
+      summary: Get consultant profile
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Consultant profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConsultantDetail"
+        "404":
+          description: Not found
+
+  # AI Chat
+  /chat/message:
+    post:
+      operationId: sendChatMessage
+      tags: [chat]
+      summary: Send message to AI assistant
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChatMessageInput"
+      responses:
+        "200":
+          description: AI response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChatResponse"
+
+  /chat/sessions:
+    get:
+      operationId: listChatSessions
+      tags: [chat]
+      summary: List chat sessions
+      responses:
+        "200":
+          description: Chat sessions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ChatSession"
+
+  /chat/sessions/{sessionId}/messages:
+    get:
+      operationId: getChatHistory
+      tags: [chat]
+      summary: Get chat history for a session
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Chat messages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ChatMessage"
+
+  # Cart
+  /cart:
+    get:
+      operationId: getCart
+      tags: [cart]
+      summary: Get cart contents
+      responses:
+        "200":
+          description: Cart
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Cart"
+
+  /cart/items:
+    post:
+      operationId: addToCart
+      tags: [cart]
+      summary: Add item to cart
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CartItemInput"
+      responses:
+        "201":
+          description: Item added
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Cart"
+
+  /cart/items/{itemId}:
+    delete:
+      operationId: removeFromCart
+      tags: [cart]
+      summary: Remove item from cart
+      parameters:
+        - name: itemId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Item removed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Cart"
+
+  # Recommendations
+  /recommendations:
+    post:
+      operationId: getRecommendations
+      tags: [recommendations]
+      summary: Get AI-powered personalized service recommendations
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RecommendationInput"
+      responses:
+        "200":
+          description: Recommendations
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RecommendationResponse"
+
+  # Stats / Dashboard
+  /stats:
+    get:
+      operationId: getPlatformStats
+      tags: [services]
+      summary: Get platform statistics
+      responses:
+        "200":
+          description: Platform stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlatformStats"
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+
+    MessageResponse:
+      type: object
+      required: [message]
+      properties:
+        message:
+          type: string
+
+    # Auth
+    RegisterInput:
+      type: object
+      required: [email, password, name]
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+        name:
+          type: string
+        company:
+          type: ["string", "null"]
+        industry:
+          type: ["string", "null"]
+
+    LoginInput:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+
+    User:
+      type: object
+      required: [id, email, name, createdAt]
+      properties:
+        id:
+          type: integer
+        email:
+          type: string
+        name:
+          type: string
+        company:
+          type: ["string", "null"]
+        industry:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    AuthResponse:
+      type: object
+      required: [user, token]
+      properties:
+        user:
+          $ref: "#/components/schemas/User"
+        token:
+          type: string
+
+    # Categories
+    Category:
+      type: object
+      required: [id, name, description, iconName, serviceCount]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        iconName:
+          type: string
+        serviceCount:
+          type: integer
+
+    # Services
+    Service:
+      type: object
+      required: [id, title, description, price, duration, categoryId, categoryName, consultantId, consultantName, rating, reviewCount, tags, imageUrl]
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+        duration:
+          type: string
+        categoryId:
+          type: integer
+        categoryName:
+          type: string
+        consultantId:
+          type: integer
+        consultantName:
+          type: string
+        consultantAvatarUrl:
+          type: ["string", "null"]
+        rating:
+          type: number
+        reviewCount:
+          type: integer
+        tags:
+          type: array
+          items:
+            type: string
+        imageUrl:
+          type: ["string", "null"]
+        featured:
+          type: boolean
+
+    ServiceDetail:
+      type: object
+      required: [id, title, description, price, duration, categoryId, categoryName, consultant, rating, reviewCount, tags, deliverables, faqs]
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        longDescription:
+          type: ["string", "null"]
+        price:
+          type: number
+        duration:
+          type: string
+        categoryId:
+          type: integer
+        categoryName:
+          type: string
+        consultant:
+          $ref: "#/components/schemas/Consultant"
+        rating:
+          type: number
+        reviewCount:
+          type: integer
+        tags:
+          type: array
+          items:
+            type: string
+        imageUrl:
+          type: ["string", "null"]
+        featured:
+          type: boolean
+        deliverables:
+          type: array
+          items:
+            type: string
+        faqs:
+          type: array
+          items:
+            $ref: "#/components/schemas/FAQ"
+        reviews:
+          type: array
+          items:
+            $ref: "#/components/schemas/Review"
+
+    FAQ:
+      type: object
+      required: [question, answer]
+      properties:
+        question:
+          type: string
+        answer:
+          type: string
+
+    Review:
+      type: object
+      required: [id, authorName, rating, comment, createdAt]
+      properties:
+        id:
+          type: integer
+        authorName:
+          type: string
+        rating:
+          type: number
+        comment:
+          type: string
+        createdAt:
+          type: string
+
+    # Consultants
+    Consultant:
+      type: object
+      required: [id, name, title, bio, avatarUrl, rating, reviewCount, specializations, yearsExperience, serviceCount]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        title:
+          type: string
+        bio:
+          type: string
+        avatarUrl:
+          type: ["string", "null"]
+        rating:
+          type: number
+        reviewCount:
+          type: integer
+        specializations:
+          type: array
+          items:
+            type: string
+        yearsExperience:
+          type: integer
+        serviceCount:
+          type: integer
+        verified:
+          type: boolean
+
+    ConsultantDetail:
+      type: object
+      required: [id, name, title, bio, avatarUrl, rating, reviewCount, specializations, yearsExperience, services, reviews]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        title:
+          type: string
+        bio:
+          type: string
+        longBio:
+          type: ["string", "null"]
+        avatarUrl:
+          type: ["string", "null"]
+        rating:
+          type: number
+        reviewCount:
+          type: integer
+        specializations:
+          type: array
+          items:
+            type: string
+        yearsExperience:
+          type: integer
+        verified:
+          type: boolean
+        services:
+          type: array
+          items:
+            $ref: "#/components/schemas/Service"
+        reviews:
+          type: array
+          items:
+            $ref: "#/components/schemas/Review"
+        languages:
+          type: array
+          items:
+            type: string
+        education:
+          type: array
+          items:
+            type: string
+
+    # Chat
+    ChatMessageInput:
+      type: object
+      required: [message]
+      properties:
+        message:
+          type: string
+        sessionId:
+          type: ["string", "null"]
+
+    ChatResponse:
+      type: object
+      required: [reply, sessionId, suggestedServices]
+      properties:
+        reply:
+          type: string
+        sessionId:
+          type: string
+        suggestedServices:
+          type: array
+          items:
+            $ref: "#/components/schemas/Service"
+
+    ChatSession:
+      type: object
+      required: [id, title, createdAt, messageCount]
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        createdAt:
+          type: string
+        messageCount:
+          type: integer
+
+    ChatMessage:
+      type: object
+      required: [id, role, content, createdAt]
+      properties:
+        id:
+          type: integer
+        role:
+          type: string
+        content:
+          type: string
+        createdAt:
+          type: string
+
+    # Cart
+    CartItem:
+      type: object
+      required: [id, serviceId, title, price, duration, consultantName]
+      properties:
+        id:
+          type: integer
+        serviceId:
+          type: integer
+        title:
+          type: string
+        price:
+          type: number
+        duration:
+          type: string
+        consultantName:
+          type: string
+        imageUrl:
+          type: ["string", "null"]
+
+    Cart:
+      type: object
+      required: [items, total]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/CartItem"
+        total:
+          type: number
+
+    CartItemInput:
+      type: object
+      required: [serviceId]
+      properties:
+        serviceId:
+          type: integer
+
+    # Recommendations
+    RecommendationInput:
+      type: object
+      required: [businessDescription]
+      properties:
+        businessDescription:
+          type: string
+        industry:
+          type: ["string", "null"]
+        goals:
+          type: array
+          items:
+            type: string
+        budget:
+          type: ["number", "null"]
+
+    RecommendationResponse:
+      type: object
+      required: [services, explanation]
+      properties:
+        services:
+          type: array
+          items:
+            $ref: "#/components/schemas/Service"
+        explanation:
+          type: string
+
+    # Platform Stats
+    PlatformStats:
+      type: object
+      required: [totalConsultants, totalServices, totalClients, averageRating]
+      properties:
+        totalConsultants:
+          type: integer
+        totalServices:
+          type: integer
+        totalClients:
+          type: integer
+        averageRating:
+          type: number

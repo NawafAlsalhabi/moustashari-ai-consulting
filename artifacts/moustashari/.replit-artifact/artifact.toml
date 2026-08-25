@@ -1,0 +1,27 @@
+kind = "web"
+previewPath = "/"
+title = "Moustashari AI"
+version = "1.0.0"
+id = "artifacts/moustashari"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 18419
+
+[services.development]
+run = "pnpm --filter @workspace/moustashari run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/moustashari", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/moustashari/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "18419"
+BASE_PATH = "/"
